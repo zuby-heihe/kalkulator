@@ -50,7 +50,10 @@ h3{font-family:var(--display);font-weight:500;font-size:16px;margin:0}
 .line{display:flex;justify-content:space-between;gap:12px;font-variant-numeric:tabular-nums}
 .line span:first-child{color:var(--muted);min-width:0}
 .line span:last-child{text-align:right;white-space:nowrap}
-.big{font-family:var(--display);font-size:22px}
+.big{font-family:var(--display);font-size:20px}
+.line span.big{white-space:normal}
+.bar b{white-space:nowrap}
+.prow.on>div:first-child>div:first-child{color:var(--jade)}
 .save{background:var(--jade-soft);color:var(--jade);border-radius:10px;padding:12px 14px;font-weight:600}
 .ru{text-decoration:line-through;color:var(--red)}
 .note{font-size:12.5px;color:var(--muted);margin:8px 0 0}
@@ -223,11 +226,12 @@ const PHONE="79142277921";
 const IMPLANT={price:40000, ruAvg:60000};
 const MAKERS=["Китай","Япония","Германия"];
 const CROWNS=[
-  {id:"mk", name:"Металлокерамика", opts:[[1800,3],[2000,5],[2600,8]], r:[2,2,2], ruAvg:18000, q:0, m:0},
-  {id:"ti", name:"Титановый сплав", opts:[[2600,6],[2800,8],[3600,10]], r:[3,3,3], ruAvg:22000, q:0, m:0},
-  {id:"cc", name:"Кобальт-хром",    opts:[[3800,6],[4500,9],[5000,12]], r:[5,5,4], ruAvg:25000, q:0, m:1},
-  {id:"zr", name:"Цирконий",        opts:[[8000,8],[10000,15],[12000,20]], r:[6,7,10], ruAvg:40000, q:2, m:2},
+  {id:"mk", name:"Металлокерамика", opts:[[2400,3],[2800,5],[3200,8]], r:[2,2,2], ruAvg:18000, q:0, m:0},
+  {id:"ti", name:"Титановый сплав", opts:[[3600,6],[4200,8],[4800,10]], r:[3,3,3], ruAvg:22000, q:0, m:0},
+  {id:"cc", name:"Кобальт-хром",    opts:[[5600,6],[6200,9],[6800,12]], r:[5,5,4], ruAvg:25000, q:0, m:1},
+  {id:"zr", name:"Цирконий",        opts:[[12000,8],[13000,15],[15000,20]], r:[6,7,10], ruAvg:40000, q:2, m:2},
 ];
+const PROST=[], EXTRA=[];
 const UP=[18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
 const LO=[48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
 const CENTRAL=new Set([13,12,11,21,22,23,43,42,41,31,32,33]);
@@ -236,6 +240,7 @@ let impQ=2, totalNow=0, calcText="";
 
 const $=s=>document.querySelector(s);
 const rub=n=>Math.round(n).toLocaleString("ru-RU")+" ₽";
+const rangeRub=(a,b)=>a===b?rub(a):Math.round(a).toLocaleString("ru-RU")+" – "+rub(b);
 const yrs=n=>n+" "+(n%10===1&&n%100!==11?"год":(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20))?"года":"лет");
 const dots=v=>'<span class="dots">'+Array.from({length:10},(_,i)=>`<i class="${i<v?"f":""}"></i>`).join("")+"</span>";
 const teethHTML=arr=>arr.map(n=>`<button type="button" class="${CENTRAL.has(n)?"c":""}" data-t="${n}" aria-pressed="${missing.has(n)}" aria-label="Зуб ${n}">${n}</button>`).join("");
@@ -263,6 +268,19 @@ function draw(){
         <span>Биосовместимость</span>${dots(c.r[2])}<span>${c.r[2]}</span>
       </div>
     </div>`}).join("");
+  const stepper=x=>`<div class="step">
+          <button type="button" aria-label="Меньше: ${x.name}" data-id="${x.id}" data-d="-1">−</button>
+          <output>${x.q}</output>
+          <button type="button" aria-label="Больше: ${x.name}" data-id="${x.id}" data-d="1">+</button>
+        </div>`;
+  if($("#prost")) $("#prost").innerHTML=PROST.map((p,i)=>`<div class="top prow ${p.q?"on":""}" style="padding:12px 14px;${i?"border-top:1px solid var(--line)":""}">
+      <div><div style="font-weight:500">${p.name}</div><div class="sub">${rangeRub(p.min,p.max)}</div></div>${stepper(p)}</div>`).join("");
+  if($("#extra")) $("#extra").innerHTML=EXTRA.map(x=>{
+    const multi=x.opts.length>1;
+    return `<div class="box mat ${x.q?"on":""}">
+      <div class="top"><div><h3>${x.name}</h3><div class="sub">${rub(x.opts[x.m][0])}</div></div>${stepper(x)}</div>
+      ${multi?`<div class="seg" role="group" aria-label="Производитель">${x.opts.map((o,i)=>`<button type="button" data-id="${x.id}" data-m="${i}" aria-pressed="${i===x.m}"><b>${MAKERS[i]}</b>${rub(o[0])}</button>`).join("")}</div>`:""}
+    </div>`}).join("");
   $("#upper").innerHTML=teethHTML(UP);
   $("#lower").innerHTML=teethHTML(LO);
   $("#tc").textContent=missing.size;
@@ -277,19 +295,28 @@ function calc(){
   CROWNS.filter(c=>c.q).forEach(c=>{const [p,w]=c.opts[c.m], t=p*c.q; total+=t; ru+=c.ruAvg*c.q;
     lines.push(`<div class="line"><span>${c.name} (${MAKERS[c.m]}) × ${c.q}</span><span>${rub(t)}</span></div>`);
     sum.push(`• ${c.name}, ${MAKERS[c.m]}, гарантия ${yrs(w)} × ${c.q} — ${rub(t)}`);});
-  const save=ru-total;
-  totalNow=total;
+  const cmpCN=total;
+  let tMin=total, tMax=total;
+  PROST.filter(p=>p.q).forEach(p=>{const a=p.min*p.q, b=p.max*p.q; tMin+=a; tMax+=b;
+    lines.push(`<div class="line"><span>${p.name} × ${p.q}</span><span>${rangeRub(a,b)}</span></div>`);
+    sum.push(`• ${p.name} × ${p.q} — ${rangeRub(a,b)}`);});
+  EXTRA.filter(x=>x.q).forEach(x=>{const t=x.opts[x.m][0]*x.q, mk=x.opts.length>1?` (${MAKERS[x.m]})`:""; tMin+=t; tMax+=t;
+    lines.push(`<div class="line"><span>${x.name}${mk} × ${x.q}</span><span>${rub(t)}</span></div>`);
+    sum.push(`• ${x.name}${mk} × ${x.q} — ${rub(t)}`);});
+  const save=ru-cmpCN;
+  totalNow=tMin;
   if(!lines.length){
     $("#res").innerHTML='<div class="empty">Добавьте имплант или коронку кнопкой «+».</div>';
-    $("#barTotal").textContent="0 ₽"; calcText=""; updateWA(); return;
+    if($("#barTotal")) $("#barTotal").textContent="0 ₽"; calcText=""; updateWA(); return;
   }
+  const totalTxt=rangeRub(tMin,tMax);
   $("#res").innerHTML=lines.join("")+`
     <div class="line"><span>Срок лечения</span><span>Хэйхэ, 3–4 дня</span></div>
-    <div class="line"><span>Итого</span><span class="big">${rub(total)}</span></div>
+    <div class="line"><span>Итого</span><span class="big">${totalTxt}</span></div>
     <div class="line"><span>Примерно в России</span><span class="ru">${rub(ru)}</span></div>
     ${save>0?`<div class="save">Экономия около ${rub(save)}</div>`:""}`;
-  $("#barTotal").textContent=rub(total);
-  calcText=sum.join("\n")+`\nИтого: ${rub(total)}`;
+  if($("#barTotal")) $("#barTotal").textContent=totalTxt;
+  calcText=sum.join("\n")+`\nИтого: ${totalTxt}`;
   updateWA();
 }
 
@@ -326,7 +353,7 @@ document.addEventListener("click",e=>{
     if(!grp.dataset.multi) grp.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed","false"));
     b.setAttribute("aria-pressed",String(on)); updateWA(); return;
   }
-  const c=CROWNS.find(x=>x.id===b.dataset.id); if(!c) return;
+  const c=[...CROWNS,...PROST,...EXTRA].find(x=>x.id===b.dataset.id); if(!c) return;
   if(b.dataset.d){c.q=Math.max(0,Math.min(32,c.q+ +b.dataset.d));}
   if(b.dataset.m){c.m=+b.dataset.m; if(!c.q) c.q=1;}
   draw();
