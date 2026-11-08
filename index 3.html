@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Лечение зубов в Хэйхэ — калькулятор</title>
+<meta name="description" content="Посчитайте стоимость имплантов и коронок в клинике «Хай Лань», Хэйхэ.">
+<style>
+/* Layout: one narrow column; tabs (by teeth / by services), arch tooth chart, total, questions, WhatsApp; sticky total bar */
+:root{
+  --bg:#f4f8fd; --card:#ffffff; --fg:#13253d; --muted:#596b82; --line:#d7e3f1;
+  --jade:#1a6fd6; --jade-soft:#e4effc; --red:#b8402e; --empty:#d5e2f1; --wa:#1fa855;
+  --s-imp:#1a6fd6; --s-ext:#d64532; --s-crn:#c9801a; --s-fil:#0d8f99;
+  --display:-apple-system,"SF Pro Display","Segoe UI",Roboto,system-ui,sans-serif;
+  --body:-apple-system,"Segoe UI",Roboto,system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d1623; --card:#142236; --fg:#e8f0fa; --muted:#93a7bf; --line:#26394f;
+  --jade:#5ba8ff; --jade-soft:#173150; --red:#ec8a77; --empty:#2c4058; --wa:#2fbf68;
+  --s-imp:#4f9cff; --s-ext:#f07a68; --s-crn:#e8a542; --s-fil:#2cc0c9; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d1623; --card:#142236; --fg:#e8f0fa; --muted:#93a7bf; --line:#26394f;
+  --jade:#5ba8ff; --jade-soft:#173150; --red:#ec8a77; --empty:#2c4058; --wa:#2fbf68;
+  --s-imp:#4f9cff; --s-ext:#f07a68; --s-crn:#e8a542; --s-fil:#2cc0c9; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;padding:0 16px}
+.wrap{max-width:560px;margin:0 auto;padding-block:24px 150px;display:flex;flex-direction:column;gap:24px}
+h1{font-family:var(--display);font-weight:700;font-size:26px;line-height:1.15;margin:0;text-wrap:balance}
+h2{font-family:var(--display);font-weight:600;font-size:16px;margin:0 0 10px}
+h3{font-family:var(--display);font-weight:600;font-size:16px;margin:0}
+.lead{color:var(--muted);margin:8px 0 0}
+.tag{display:inline-block;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--jade);margin-bottom:8px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px}
+.list{display:flex;flex-direction:column;gap:12px}
+.note{font-size:12.5px;color:var(--muted);margin:8px 0 0}
+button{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
+
+/* tabs */
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;background:var(--jade-soft);border-radius:14px;margin-bottom:14px}
+.tabs button{padding:10px;border:0;border-radius:11px;background:transparent;color:var(--muted);font-weight:600;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--card);color:var(--fg);box-shadow:0 1px 3px rgba(19,37,61,.12)}
+
+/* service chips */
+.svc-chips{display:flex;flex-wrap:wrap;gap:8px;padding:2px 0 6px}
+.svc-chips::-webkit-scrollbar{display:none}
+.svc-chips button{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:9px 14px;border:1px solid var(--line);border-radius:999px;background:var(--card);cursor:pointer;white-space:nowrap;font-size:14px}
+.svc-chips button i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.svc-chips button[aria-pressed="true"]{background:var(--c);border-color:var(--c);color:#fff}
+.svc-chips button[aria-pressed="true"] i{background:#fff}
+.hint{font-size:13.5px;color:var(--muted);margin:6px 0 10px}
+.maker{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;font-size:13px;color:var(--muted)}
+.maker .seg{flex:1 1 220px}
+
+/* arch chart */
+.chart{padding:14px 10px}
+.arch{position:relative;width:100%;aspect-ratio:1.75/1}
+.arch .t{position:absolute;width:8.4%;aspect-ratio:1/1.12;transform:translate(-50%,-50%);border:1.5px solid var(--line);border-radius:38% 38% 44% 44%;background:var(--bg);font-size:clamp(10px,2.9vw,13px);font-weight:600;cursor:pointer;padding:0;font-variant-numeric:tabular-nums;display:flex;align-items:center;justify-content:center;transition:transform .12s}
+.arch .t:active{transform:translate(-50%,-50%) scale(.92)}
+.arch .t.on{background:var(--c);border-color:var(--c);color:#fff}
+.arch .lbl{position:absolute;left:50%;transform:translateX(-50%);font-size:13px;color:var(--muted);white-space:nowrap;text-align:center}
+.pop{position:absolute;left:50%;transform:translateX(-50%);padding:4px 12px;border:1.5px solid var(--c,var(--jade));border-radius:999px;background:var(--card);color:var(--c,var(--jade));font-size:12px;font-weight:600;white-space:nowrap;max-width:72%;overflow:hidden;text-overflow:ellipsis}
+.sides{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:14px 6px}
+.plan{margin-top:12px;display:flex;flex-direction:column}
+.plan-h{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);margin-bottom:6px}
+.plan-h button{border:0;background:none;color:var(--red);font-weight:600;cursor:pointer;padding:4px}
+.prow{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:10px;padding:9px 2px;border-top:1px solid var(--line);font-size:14px}
+.prow .d{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.prow .p{font-variant-numeric:tabular-nums;font-weight:600}
+.prow .x{border:0;background:none;color:var(--muted);font-size:18px;line-height:1;cursor:pointer;padding:2px 6px}
+.empty{color:var(--muted);font-size:14px}
+
+/* services tab */
+.mat{padding:14px;display:flex;flex-direction:column;gap:12px}
+.mat.on{border-color:var(--jade)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.top>div{min-width:0}
+.sub{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.step{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.step button{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--bg);font-size:18px;cursor:pointer;line-height:1}
+.step output{min-width:22px;text-align:center;font-weight:600;font-variant-numeric:tabular-nums}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.seg button{font-size:13px;padding:8px 4px;border:1px solid var(--line);border-radius:10px;background:var(--bg);cursor:pointer;line-height:1.3;font-variant-numeric:tabular-nums}
+.seg button b{display:block;font-weight:600;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--jade);border-color:var(--jade);color:var(--card)}
+.rates{display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:center;font-size:13px;color:var(--muted)}
+.dots{display:flex;gap:3px}
+.dots i{flex:1;max-width:16px;height:8px;border-radius:3px;background:var(--empty)}
+.dots i.f{background:var(--jade)}
+.rates span:last-child{font-variant-numeric:tabular-nums;color:var(--fg);font-weight:600}
+
+/* result */
+.res{padding:16px;display:flex;flex-direction:column;gap:10px}
+.line{display:flex;justify-content:space-between;gap:12px;font-variant-numeric:tabular-nums}
+.line span:first-child{color:var(--muted);min-width:0}
+.line span:last-child{text-align:right;white-space:nowrap}
+.big{font-family:var(--display);font-size:22px;font-weight:700}
+.save{background:var(--jade-soft);color:var(--jade);border-radius:10px;padding:12px 14px;font-weight:600}
+.ru{text-decoration:line-through;color:var(--red)}
+
+/* questions */
+.q{padding:16px;display:flex;flex-direction:column;gap:18px}
+.qi{display:flex;flex-direction:column;gap:8px}
+.qi>label,.qi>.ql{font-weight:600;font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{font-size:14px;padding:9px 14px;border:1px solid var(--line);border-radius:999px;background:var(--card);cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--jade);border-color:var(--jade);color:var(--card)}
+input[type=text],textarea{font:inherit;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg);width:100%}
+textarea{min-height:76px;resize:vertical}
+
+.cta{display:flex;flex-direction:column;gap:12px;padding:16px}
+.wa{display:flex;align-items:center;justify-content:center;gap:10px;font-weight:600;font-size:16px;padding:14px;border-radius:12px;background:var(--wa);color:#fff;text-decoration:none}
+.wa svg{width:22px;height:22px;flex-shrink:0}
+.alt{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.phone{font-family:var(--display);font-size:16px;color:var(--fg);user-select:all;font-weight:600}
+.alt button{font-size:13px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);cursor:pointer}
+
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));z-index:5}
+.bar .in{max-width:560px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.bar small{display:block;color:var(--muted);font-size:12px}
+.bar b{font-family:var(--display);font-size:20px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar a{font-weight:600;font-size:14px;padding:11px 16px;border-radius:12px;background:var(--jade);color:#fff;text-decoration:none;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){.arch .t{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="tag">Муниципальная клиника «Хай Лань» · Хэйхэ</span>
+    <h1>Сколько стоит лечение зубов в Китае</h1>
+    <p class="lead">Отметьте на схеме, что нужно сделать, и посчитайте цену ниже. Лечение в Хэйхэ занимает 3–4 дня.</p>
+  </header>
+
+  <section>
+    <h2>1. Что нужно сделать</h2>
+    <div class="svc-chips" id="svcChips"></div>
+    <p class="hint" id="hint"></p>
+    <div class="box chart">
+      <div class="arch" id="archUp"><div class="lbl" style="top:70%">Верхняя челюсть</div><div class="pop" id="popUp" hidden style="top:50%"></div></div>
+      <div class="sides"><span>← правая сторона</span><span>левая сторона →</span></div>
+      <div class="arch" id="archLo"><div class="lbl" style="top:18%">Нижняя челюсть</div><div class="pop" id="popLo" hidden style="top:36%"></div></div>
+      <div class="plan" id="plan"></div>
+    </div>
+    <p class="note">Схема показана как вид спереди и не заменяет снимок или осмотр врача.</p>
+  </section>
+
+  <section>
+    <h2>2. Импланты</h2>
+    <div class="box mat" id="impBox">
+      <div class="top">
+        <div><h3>Имплант</h3><div class="sub">40 000 ₽ за 1 шт.</div></div>
+        <div class="step">
+          <button type="button" aria-label="Меньше имплантов" data-imp="-1">−</button>
+          <output id="impQ">0</output>
+          <button type="button" aria-label="Больше имплантов" data-imp="1">+</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>3. Коронки</h2>
+    <p class="note" style="margin:0 0 10px" id="crownNote">Выберите материал и производителя. Оценки по 10-балльной шкале.</p>
+    <div class="list" id="crowns"></div>
+  </section>
+
+  <section>
+    <h2>4. Итог</h2>
+    <div class="box res" id="res"></div>
+    <p class="note">Цены клиники указаны за единицу. Точную сумму врач назовёт после осмотра и снимка. Цены в России — средние, для сравнения.</p>
+  </section>
+
+  <section>
+    <h2>5. Расскажите о себе</h2>
+    <p class="note" style="margin:0 0 10px">Ответы попадут в сообщение. Так я сразу пойму вашу ситуацию.</p>
+    <div class="box q">
+      <div class="qi">
+        <label for="worry">Что беспокоит больше всего?</label>
+        <textarea id="worry" placeholder="Например: трудно жевать, не нравится улыбка, старый мост нужно заменить"></textarea>
+      </div>
+      <div class="qi">
+        <label for="city">Ваш город</label>
+        <input type="text" id="city" placeholder="Например, Якутск">
+      </div>
+      <div class="qi">
+        <span class="ql">Когда удобно поехать?</span>
+        <div class="chips" data-group="when">
+          <button type="button" aria-pressed="false">В ближайший месяц</button>
+          <button type="button" aria-pressed="false">Через 1–3 месяца</button>
+          <button type="button" aria-pressed="false">Пока изучаю варианты</button>
+        </div>
+      </div>
+      <div class="qi">
+        <span class="ql">Как удобнее добираться?</span>
+        <div class="chips" data-group="road">
+          <button type="button" aria-pressed="false">До Благовещенска сам(а)</button>
+          <button type="button" aria-pressed="false">Помогите с дорогой</button>
+        </div>
+      </div>
+      <div class="qi">
+        <span class="ql">Есть панорамный снимок зубов (ОПТГ)?</span>
+        <div class="chips" data-group="xray">
+          <button type="button" aria-pressed="false">Есть, пришлю</button>
+          <button type="button" aria-pressed="false">Пока нет</button>
+          <button type="button" aria-pressed="false">Не знаю</button>
+        </div>
+      </div>
+      <div class="qi">
+        <label for="name">Как к вам обращаться?</label>
+        <input type="text" id="name" placeholder="Ваше имя">
+      </div>
+    </div>
+  </section>
+
+  <section class="box cta" id="send">
+    <h2 style="margin:0">Получить свой план лечения</h2>
+    <p style="margin:0;color:var(--muted)">Нажмите кнопку. Откроется WhatsApp с готовым сообщением: расчёт и ваши ответы. Останется только отправить.</p>
+    <a class="wa" id="wa" href="https://wa.me/79142277921" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.7.3-.2.3-.9.9-.9 2.2s1 2.6 1.1 2.7c.1.2 1.9 2.9 4.6 4 1.7.7 2.4.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2l-.5-.3Z"/></svg>
+      Написать в WhatsApp
+    </a>
+    <div class="alt">
+      <span>Или позвоните: <span class="phone" id="ph">8 914 227-79-21</span></span>
+      <button type="button" id="copy">Скопировать номер</button>
+    </div>
+  </section>
+</div>
+
+<div class="bar"><div class="in">
+  <div><small id="barLbl">Итого</small><b id="barTotal">0 ₽</b></div>
+  <a id="waBar" href="https://wa.me/79142277921" target="_blank" rel="noopener">Отправить</a>
+</div></div>
+
+<script>
+(function(){
+const PHONE="79142277921";
+/* Что отмечают на схеме (без цен) */
+const MARKS=[
+  {id:"ext", name:"Удаление",  color:"--s-ext"},
+  {id:"crn", name:"Коронка",   color:"--s-crn"},
+  {id:"fil", name:"Пломба",    color:"--s-fil"},
+  {id:"imp", name:"Имплант",   color:"--s-imp"},
+];
+const markById=id=>MARKS.find(m=>m.id===id);
+/* Прайс */
+const IMPLANT={price:40000, ruAvg:60000};
+const MAKERS=["Китай","Япония","Германия"];
+const CROWNS=[
+  {id:"mk", name:"Металлокерамика", opts:[[2400,3],[2800,5],[3200,8]], r:[2,2,2], ruAvg:18000, q:0, m:0},
+  {id:"ti", name:"Титановый сплав", opts:[[3600,6],[4200,8],[4800,10]], r:[3,3,3], ruAvg:22000, q:0, m:0},
+  {id:"cc", name:"Кобальт-хром",    opts:[[5600,6],[6200,9],[6800,12]], r:[5,5,4], ruAvg:25000, q:0, m:1},
+  {id:"zr", name:"Цирконий",        opts:[[12000,8],[13000,15],[15000,20]], r:[6,7,10], ruAvg:40000, q:2, m:2},
+];
+const UP=[18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
+const LO=[48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+// Пример при открытии
+const plan=new Map([[36,"imp"],[46,"imp"],[11,"crn"],[21,"crn"]]);
+let impQ=2, active="ext", lastTooth=null, calcText="";
+
+const $=s=>document.querySelector(s);
+const rub=n=>Math.round(n).toLocaleString("ru-RU")+" ₽";
+const yrs=n=>n+" "+(n%10===1&&n%100!==11?"год":(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20))?"года":"лет");
+const plural=(n,a,b,c)=>n%10===1&&n%100!==11?a:(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20))?b:c;
+const dots=v=>'<span class="dots">'+Array.from({length:10},(_,i)=>`<i class="${i<v?"f":""}"></i>`).join("")+"</span>";
+const teethFor=id=>[...plan.entries()].filter(([,v])=>v===id).map(([k])=>k).sort((a,b)=>a-b);
+
+/* ---------- схема ---------- */
+function buildArch(el,nums,upper){
+  const n=nums.length;
+  nums.forEach((num,i)=>{
+    const th=Math.PI*(1-i/(n-1));
+    const b=document.createElement("button");
+    b.type="button"; b.className="t"; b.dataset.t=num; b.textContent=num;
+    b.style.left=(50+44*Math.cos(th))+"%";
+    b.style.top=(upper?88-76*Math.sin(th):12+76*Math.sin(th))+"%";
+    el.appendChild(b);
+  });
+}
+buildArch($("#archUp"),UP,true);
+buildArch($("#archLo"),LO,false);
+
+function drawChart(){
+  $("#svcChips").innerHTML=MARKS.map(m=>`<button type="button" data-mark="${m.id}" aria-pressed="${m.id===active}" style="--c:var(${m.color})"><i></i>${m.name}</button>`).join("");
+  $("#hint").textContent=`Нажимайте на зубы — к каждому добавится «${markById(active).name}». Повторное нажатие уберёт.`;
+  document.querySelectorAll(".arch .t").forEach(b=>{
+    const id=plan.get(+b.dataset.t), m=id&&markById(id);
+    b.classList.toggle("on",!!m);
+    b.style.setProperty("--c",m?`var(${m.color})`:"transparent");
+    b.setAttribute("aria-label",`Зуб ${b.dataset.t}${m?": "+m.name.toLowerCase():""}`);
+  });
+  ["#popUp","#popLo"].forEach(p=>$(p).hidden=true);
+  if(lastTooth!=null){
+    const id=plan.get(lastTooth), pop=$(UP.includes(lastTooth)?"#popUp":"#popLo");
+    pop.hidden=false;
+    if(id){const m=markById(id); pop.style.setProperty("--c",`var(${m.color})`); pop.textContent=`Зуб ${lastTooth} · ${m.name.toLowerCase()}`;}
+    else{pop.style.removeProperty("--c"); pop.textContent=`Зуб ${lastTooth} · убран`;}
+  }
+  const groups=MARKS.map(m=>[m,teethFor(m.id)]).filter(([,t])=>t.length);
+  const total=plan.size;
+  $("#plan").innerHTML=total?`<div class="plan-h"><span>Отмечено: ${total} ${plural(total,"зуб","зуба","зубов")}</span><button type="button" id="clear">Очистить</button></div>`+
+    groups.map(([m,t])=>`<div class="prow" style="--c:var(${m.color})"><span class="d"></span><span><b>${m.name}</b> — ${t.join(", ")}</span><span class="p">${t.length}</span><span></span></div>`).join("")
+    :`<div class="empty">Выберите, что нужно сделать, и нажмите на зубы.</div>`;
+}
+
+/* ---------- калькулятор ---------- */
+function drawCalc(){
+  $("#impQ").textContent=impQ;
+  $("#impBox").classList.toggle("on",impQ>0);
+  const crn=teethFor("crn").length;
+  $("#crownNote").textContent=crn
+    ?`На схеме отмечено ${crn} ${plural(crn,"коронка","коронки","коронок")}. Выберите материал, производителя и количество. Оценки по 10-балльной шкале.`
+    :"Выберите материал и производителя. Оценки по 10-балльной шкале.";
+  $("#crowns").innerHTML=CROWNS.map(c=>{
+    const [p,w]=c.opts[c.m];
+    return `<div class="box mat ${c.q?"on":""}">
+      <div class="top">
+        <div><h3>${c.name}</h3><div class="sub">${rub(p)} · гарантия ${yrs(w)}</div></div>
+        <div class="step">
+          <button type="button" aria-label="Меньше: ${c.name}" data-id="${c.id}" data-d="-1">−</button>
+          <output>${c.q}</output>
+          <button type="button" aria-label="Больше: ${c.name}" data-id="${c.id}" data-d="1">+</button>
+        </div>
+      </div>
+      <div class="seg" role="group" aria-label="Производитель">
+        ${c.opts.map((o,i)=>`<button type="button" data-id="${c.id}" data-m="${i}" aria-pressed="${i===c.m}"><b>${MAKERS[i]}</b>${rub(o[0])}</button>`).join("")}
+      </div>
+      <div class="rates">
+        <span>Прочность</span>${dots(c.r[0])}<span>${c.r[0]}</span>
+        <span>Эстетичность</span>${dots(c.r[1])}<span>${c.r[1]}</span>
+        <span>Биосовместимость</span>${dots(c.r[2])}<span>${c.r[2]}</span>
+      </div>
+    </div>`}).join("");
+  calc();
+}
+
+function calc(){
+  const lines=[], sum=[]; let total=0, ru=0;
+  if(impQ){const t=IMPLANT.price*impQ; total+=t; ru+=IMPLANT.ruAvg*impQ;
+    lines.push(`<div class="line"><span>Импланты × ${impQ}</span><span>${rub(t)}</span></div>`); sum.push(`• Импланты × ${impQ} — ${rub(t)}`);}
+  CROWNS.filter(c=>c.q).forEach(c=>{const [p,w]=c.opts[c.m], t=p*c.q; total+=t; ru+=c.ruAvg*c.q;
+    lines.push(`<div class="line"><span>${c.name} (${MAKERS[c.m]}) × ${c.q}</span><span>${rub(t)}</span></div>`);
+    sum.push(`• ${c.name}, ${MAKERS[c.m]}, гарантия ${yrs(w)} × ${c.q} — ${rub(t)}`);});
+  const save=ru-total;
+  if(!lines.length){
+    $("#res").innerHTML='<div class="empty">Добавьте имплант или коронку кнопкой «+».</div>';
+    $("#barTotal").textContent="0 ₽"; calcText=""; updateWA(); return;
+  }
+  $("#res").innerHTML=lines.join("")+`
+    <div class="line"><span>Срок лечения</span><span>Хэйхэ, 3–4 дня</span></div>
+    <div class="line"><span>Итого</span><span class="big">${rub(total)}</span></div>
+    <div class="line"><span>Примерно в России</span><span class="ru">${rub(ru)}</span></div>
+    ${save>0?`<div class="save">Экономия около ${rub(save)}</div>`:""}`;
+  $("#barTotal").textContent=rub(total);
+  calcText=sum.join("\n")+`\nИтого: ${rub(total)}`;
+  updateWA();
+}
+
+function drawAll(){drawChart();drawCalc();}
+
+/* ---------- сообщение ---------- */
+const picked=g=>[...document.querySelectorAll(`[data-group="${g}"] button[aria-pressed="true"]`)].map(b=>b.textContent.trim());
+function buildMessage(){
+  const name=$("#name").value.trim(), city=$("#city").value.trim(), worry=$("#worry").value.trim();
+  const parts=[`Здравствуйте!${name?" Меня зовут "+name+".":""} Хочу лечение зубов в Хэйхэ.`];
+  const marks=MARKS.map(m=>[m,teethFor(m.id)]).filter(([,t])=>t.length);
+  if(marks.length) parts.push("Что нужно сделать:\n"+marks.map(([m,t])=>`• ${m.name}: зубы ${t.join(", ")}`).join("\n"));
+  if(calcText) parts.push("Мой расчёт:\n"+calcText);
+  const a=[];
+  if(worry) a.push("Беспокоит: "+worry);
+  if(city) a.push("Город: "+city);
+  const w=picked("when"); if(w.length) a.push("Когда: "+w[0]);
+  const r=picked("road"); if(r.length) a.push("Дорога: "+r[0]);
+  const x=picked("xray"); if(x.length) a.push("Снимок ОПТГ: "+x[0]);
+  if(a.length) parts.push(a.join("\n"));
+  return parts.join("\n\n");
+}
+function updateWA(){ $("#wa").href=`https://wa.me/${PHONE}?text=${encodeURIComponent(buildMessage())}`; }
+
+/* ---------- события ---------- */
+$("#waBar").addEventListener("click",e=>{e.preventDefault();$("#send").scrollIntoView({behavior:"smooth",block:"center"});});
+document.addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  if(b.dataset.mark){active=b.dataset.mark; drawChart(); return;}
+  if(b.dataset.t){
+    const t=+b.dataset.t, was=plan.get(t);
+    if(was===active) plan.delete(t); else plan.set(t,active);
+    const now=plan.get(t);
+    if(was==="imp"&&now!=="imp") impQ=Math.max(0,impQ-1);
+    if(now==="imp"&&was!=="imp") impQ=Math.min(32,impQ+1);
+    lastTooth=t; drawAll(); return;
+  }
+  if(b.id==="clear"){impQ=Math.max(0,impQ-teethFor("imp").length); plan.clear(); lastTooth=null; drawAll(); return;}
+  if(b.dataset.imp){impQ=Math.max(0,Math.min(32,impQ+ +b.dataset.imp)); drawCalc(); return;}
+  const grp=b.closest("[data-group]");
+  if(grp){const on=b.getAttribute("aria-pressed")!=="true"; grp.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed","false")); b.setAttribute("aria-pressed",String(on)); updateWA(); return;}
+  const c=CROWNS.find(x=>x.id===b.dataset.id); if(!c) return;
+  if(b.dataset.d){c.q=Math.max(0,Math.min(32,c.q+ +b.dataset.d));}
+  if(b.dataset.m){c.m=+b.dataset.m; if(!c.q) c.q=1;}
+  drawCalc();
+});
+["#name","#city","#worry"].forEach(id=>$(id).addEventListener("input",updateWA));
+$("#copy").addEventListener("click",async()=>{
+  const btn=$("#copy");
+  try{await navigator.clipboard.writeText("+"+PHONE);btn.textContent="Скопировано";}
+  catch(_){const r=document.createRange();r.selectNodeContents($("#ph"));const s=getSelection();s.removeAllRanges();s.addRange(r);btn.textContent="Номер выделен";}
+  setTimeout(()=>btn.textContent="Скопировать номер",2000);
+});
+drawAll();
+})();
+</script>
+</body>
+</html>
